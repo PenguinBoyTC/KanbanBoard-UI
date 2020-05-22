@@ -1,0 +1,18 @@
+/*.App {*/
+/*    width: 100%;*/
+/*    margin: 0 auto;*/
+/*}*/
+
+.drag-container {
+    text-align: left;
+}
+
+
+
+.column {
+    position: absolute;
+    width: 150px;
+    height: 500px;
+    border: 2px dotted #5c5454;
+}
+
