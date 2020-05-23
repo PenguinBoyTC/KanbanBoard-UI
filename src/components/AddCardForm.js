@@ -1,5 +1,7 @@
 import React from "react";
 import {Form, Input, Button, Select, Upload} from 'antd';
+import {LOCAL_API_ROOT} from "../constants";
+import {createNewCard} from '../asyncActions'
 
 const {Option} = Select;
 
@@ -13,14 +15,22 @@ class AddCardForm extends React.Component {
 
     onSubmit = values => {
         this.setState({loading: true});
-        const {closeModel} = this.props
-        setTimeout(() => {
-            this.setState({loading: false});
-            console.log('Success:', values);
-            closeModel();
-        }, 3000);
-
-
+        const {closeModel, setReloadValue} = this.props
+        const { name, education, prefix, phone, email, comment} = values
+        const body = {
+            name,
+            education,
+            phone: prefix + phone,
+            email,
+            status: "applied",
+            comment
+        }
+        createNewCard(body)
+            .then(() => {
+                setReloadValue(true);
+                this.setState({loading: false});
+                closeModel();
+            })
     }
     onSubmitFailed = errorInfo => {
         console.log('Failed:', errorInfo);
@@ -113,9 +123,9 @@ class AddCardForm extends React.Component {
                 <Form.Item name="comment" label="comment">
                     <Input.TextArea/>
                 </Form.Item>
-                <Form.Item label="Resume">
+                <Form.Item label="Resume" >
                     <Form.Item name="resume" valuePropName="fileList" getValueFromEvent={normFile} noStyle>
-                        <Upload.Dragger name="files" action="/upload.do">
+                        <Upload.Dragger name="files" action={`${LOCAL_API_ROOT}/upload`}>
                             <p className="ant-upload-text">Click or drag file to this area to upload</p>
                             <p className="ant-upload-hint">Support for a single or bulk upload.</p>
                         </Upload.Dragger>

@@ -3,15 +3,15 @@ import { Card } from 'antd'
 
 class CardItem extends React.Component {
     render() {
-        const{id, name, education, number, status, backgroundColor} = this.props.card
+        const{ name, education, phone, status, backgroundColor} = this.props.card
         return (
             <div>
                 <Card
-                    title={`Name: ${name}`}
+                    title={`${name}`}
                     // style={{ width: 100, height: 100 }}
                     bordered={true}
                 >
-                    <p>{`Contact: ${number}`}</p>
+                    <p>{`Contact: ${phone}`}</p>
                 </Card>
             </div>
         );

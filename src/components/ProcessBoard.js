@@ -1,7 +1,9 @@
 import React from "react";
 import CardItem from "./CardItem";
 import AddCardForm from "./AddCardForm";
+import {fetchCardList} from '../asyncActions'
 import {Space, Divider, Button, Modal} from 'antd';
+import {LOCAL_API_ROOT} from "../constants";
 
 
 class ProcessBoard extends React.Component {
@@ -9,40 +11,34 @@ class ProcessBoard extends React.Component {
         super(props);
         this.state = {
             visible: false,
-            cardList: [{
-                id: 1,
-                name: "TC",
-                education: "KS",
-                number: "12345",
-                email: "asdf",
-                status: "applied",
-                comment: "hello",
-            }, {
-                id: 2,
-                name: "TC2",
-                education: "KS",
-                number: "12345",
-                email: "asdf",
-                status: "phoneScreen",
-                comment: "hello",
-            }, {
-                id: 3,
-                name: "TC3",
-                education: "KS",
-                number: "12345",
-                email: "asdf",
-                status: "onSite",
-                comment: "hello",
-            }, {
-                id: 4,
-                name: "TC4",
-                education: "KS",
-                number: "12345",
-                email: "asdf",
-                status: "offered",
-                comment: "hello",
-            }
-            ]
+            reload: false,
+            cardList: []
+        }
+    }
+
+    componentDidMount() {
+        fetchCardList()
+            .then((data) => {
+                console.log(data)
+                this.setState({
+                    cardList: data,
+                })
+            })
+        // fetch(`http://localhost:5050/cardlist`).then((response) => {
+        //     console.log('response', response.json())
+        // })
+    }
+
+    componentDidUpdate(prevProps, prevState, _) {
+        if (this.state.reload && prevState.reload !== this.state.reload) {
+            fetchCardList()
+                .then((data) => {
+                    console.log(data)
+                    this.setState({
+                        cardList: data,
+                        reload: false,
+                    })
+                })
         }
     }
 
@@ -57,7 +53,7 @@ class ProcessBoard extends React.Component {
         let id = event.dataTransfer.getData("id");
 
         let cardList = this.state.cardList.filter((card) => {
-            if (card.id == id) {
+            if (card._id == id) {
                 card.status = curStatus
             }
             return card
@@ -69,6 +65,12 @@ class ProcessBoard extends React.Component {
         });
     }
 
+    setReloadValue = (value) => {
+        this.setState({
+            reload: value
+        })
+    }
+
     showModal = () => {
         this.setState({
             visible: true,
@@ -76,7 +78,7 @@ class ProcessBoard extends React.Component {
     };
 
     closeModel = () => {
-        this.setState({ visible: false });
+        this.setState({visible: false});
     };
 
     renderColumnComponent = (status, cards) => {
@@ -107,8 +109,8 @@ class ProcessBoard extends React.Component {
         cardList.forEach((card) => {
             cards[card.status].push(
                 <div
-                    key={card.id}
-                    onDragStart={(event) => this.onDragStart(event, card.id)}
+                    key={card._id}
+                    onDragStart={(event) => this.onDragStart(event, card._id)}
                     draggable
                     className="card-container"
                 >
@@ -137,7 +139,10 @@ class ProcessBoard extends React.Component {
                     onCancel={this.closeModel}
                     footer={null}
                 >
-                    <AddCardForm closeModel={this.closeModel} />
+                    <AddCardForm
+                        closeModel={this.closeModel}
+                        setReloadValue={this.setReloadValue}
+                    />
                 </Modal>
             </>
         );
