@@ -1,16 +1,19 @@
 import React from "react";
-import CardItem from "./CardItem";
-import AddCardForm from "./AddCardForm";
-import {fetchCardList} from '../asyncActions'
-import {Space, Divider, Button, Modal} from 'antd';
-import {LOCAL_API_ROOT} from "../constants";
+import AddCardFormModal from './AddCardFormModal';
+import {fetchCardList, deleteCardById, updateCardStatusById} from '../asyncActions'
+import {Space, Button, List, Avatar, Popconfirm} from 'antd';
+import {DeleteTwoTone} from '@ant-design/icons';
+import InfiniteScroll from 'react-infinite-scroller';
+import CardDrawer from './CardDrawer';
 
 
 class ProcessBoard extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            visible: false,
+            openCardInfo: null,
+            isDrawerVisible: false,
+            isModalVisible: false,
             reload: false,
             cardList: []
         }
@@ -18,24 +21,20 @@ class ProcessBoard extends React.Component {
 
     componentDidMount() {
         fetchCardList()
-            .then((data) => {
-                console.log(data)
+            .then((cardList) => {
                 this.setState({
-                    cardList: data,
+                    cardList: cardList,
                 })
             })
-        // fetch(`http://localhost:5050/cardlist`).then((response) => {
-        //     console.log('response', response.json())
-        // })
+        // updateCardStatusById('5ec9ca205a1b6b745c481775', 'applied')
     }
 
     componentDidUpdate(prevProps, prevState, _) {
         if (this.state.reload && prevState.reload !== this.state.reload) {
             fetchCardList()
-                .then((data) => {
-                    console.log(data)
+                .then((cardList) => {
                     this.setState({
-                        cardList: data,
+                        cardList: cardList,
                         reload: false,
                     })
                 })
@@ -53,16 +52,18 @@ class ProcessBoard extends React.Component {
         let id = event.dataTransfer.getData("id");
 
         let cardList = this.state.cardList.filter((card) => {
-            if (card._id == id) {
+            if (card._id === id) {
                 card.status = curStatus
             }
             return card
         });
-
-        this.setState({
-            ...this.state,
-            cardList
-        });
+        updateCardStatusById(id, curStatus)
+            .then(() => {
+                this.setState({
+                    ...this.state,
+                    cardList
+                });
+            })
     }
 
     setReloadValue = (value) => {
@@ -73,25 +74,84 @@ class ProcessBoard extends React.Component {
 
     showModal = () => {
         this.setState({
-            visible: true,
+            isModalVisible: true,
         });
     };
 
     closeModel = () => {
-        this.setState({visible: false});
+        this.setState({isModalVisible: false});
+    };
+
+    showDrawer = (openCardInfo) => {
+        this.setState({
+            isDrawerVisible: true,
+            openCardInfo,
+        });
+    };
+
+    closeDrawer = () => {
+        this.setState({
+            isDrawerVisible: false,
+            openCardInfo: null,
+        });
+    };
+    handleDeleteConfirm = (cardId) => {
+        deleteCardById(cardId)
+            .then(() => {
+                this.setReloadValue(true)
+            })
+    }
+    handleInfiniteOnLoad = () => {
+        // TODO: for handling infinite scrolling window
+
     };
 
     renderColumnComponent = (status, cards) => {
         return (
-            <div
-                className={`column`}
-                onDragOver={(event) => this.onDragOver(event)}
-                onDrop={(event) => {
-                    this.onDrop(event, status)
-                }}>
+            <div>
                 <center><h2>{status}</h2></center>
-                <Divider/>
-                {cards[status]}
+                <div
+                    className="card-infinite-container"
+                    onDragOver={(event) => this.onDragOver(event)}
+                    onDrop={(event) => this.onDrop(event, status)}
+                >
+                    <InfiniteScroll
+                        loadMore={this.handleInfiniteOnLoad}
+                        initialLoad={false}
+                        pageStart={0}
+                        useWindow={false}
+                    >
+                        <List
+                            dataSource={cards[status]}
+                            renderItem={item => (
+                                <List.Item
+                                    key={item._id}
+                                    actions={[
+                                        <Popconfirm
+                                            title="Are you sure delete this task?"
+                                            onConfirm={() => this.handleDeleteConfirm(item._id)}
+                                            okText="Yes"
+                                            cancelText="No"
+                                        >
+                                            <DeleteTwoTone twoToneColor="#eb2f96"/>
+                                        </Popconfirm>
+                                    ]}
+                                    onDragStart={(event) => this.onDragStart(event, item._id)}
+                                    draggable
+                                >
+                                    <List.Item.Meta
+                                        // avatar={
+                                        //     <Avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
+                                        // }
+                                        title={<a href="#" onClick={() => this.showDrawer(item)}>{item.name}</a>}
+                                        description={item.email}
+                                    />
+                                </List.Item>
+                            )}
+                        >
+                        </List>
+                    </InfiniteScroll>
+                </div>
             </div>
         )
     }
@@ -105,26 +165,15 @@ class ProcessBoard extends React.Component {
             accepted: [],
             rejected: [],
         }
-        const {cardList, visible} = this.state
-        cardList.forEach((card) => {
-            cards[card.status].push(
-                <div
-                    key={card._id}
-                    onDragStart={(event) => this.onDragStart(event, card._id)}
-                    draggable
-                    className="card-container"
-                >
-                    {<CardItem card={card}/>}
-                </div>
-            );
-        });
+        const {cardList, isModalVisible, isDrawerVisible, openCardInfo} = this.state
+        cardList && cardList.forEach((card) => {
+            cards[card.status].push(card)
+        })
 
         return (
             <>
-                <Button type="primary" onClick={this.showModal}>Add</Button>
-                <Button type="primary">Save</Button>
                 <div className="drag-container">
-                    <Space size={155} align="baseline">
+                    <Space size={25} align="baseline">
                         {this.renderColumnComponent("applied", cards)}
                         {this.renderColumnComponent("phoneScreen", cards)}
                         {this.renderColumnComponent("onSite", cards)}
@@ -133,17 +182,17 @@ class ProcessBoard extends React.Component {
                         {this.renderColumnComponent("rejected", cards)}
                     </Space>
                 </div>
-                <Modal
-                    visible={visible}
-                    title="Create a new profile"
-                    onCancel={this.closeModel}
-                    footer={null}
-                >
-                    <AddCardForm
-                        closeModel={this.closeModel}
-                        setReloadValue={this.setReloadValue}
-                    />
-                </Modal>
+                <Button type="primary" onClick={this.showModal}>Add</Button>
+                <AddCardFormModal
+                    isModalVisible={isModalVisible}
+                    closeModel={this.closeModel}
+                    setReloadValue={this.setReloadValue}
+                />
+                <CardDrawer
+                    isDrawerVisible={isDrawerVisible}
+                    openCardInfo={openCardInfo}
+                    closeDrawer={this.closeDrawer}
+                />
             </>
         );
     }
