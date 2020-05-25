@@ -28,7 +28,6 @@ export const fetchCardList = () => {
                         duration: 0
                     })
                 })
-
         })
 }
 
@@ -129,5 +128,57 @@ export const updateCardRatesById = (cardId, body) => {
         .catch((err) => {
             console.log(err)
             message.error('Failed to update')
+        })
+}
+
+export const registerUser = (body) => {
+    const params = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    };
+    return fetch(`${LOCAL_API_ROOT}/register`, params)
+        .then((response) => {
+            if (response.ok) {
+                return response.json()
+            }
+            throw new Error()
+        })
+        .then((data) => {
+            message.success(data.message)
+            return true
+        })
+        .catch((err) => {
+            console.log("Fail to register")
+            message.error("User name already exist")
+            return false
+        })
+}
+
+export const loginUser = (body) => {
+    const params = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+    };
+    return fetch(`${LOCAL_API_ROOT}/login`, params)
+        .then((response) => {
+            if (response.ok) {
+                return response.json()
+            }
+            throw new Error()
+        })
+        .then((data) => {
+            const {token} = data
+            message.success("Login Successful")
+            return token
+        })
+        .catch((err) => {
+            console.log(err)
+            message.error("Login failed")
         })
 }
