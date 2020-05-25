@@ -14,6 +14,28 @@
     height: 300px;
 }
 
+.ant-list-item:hover {
+    cursor: grab;
+    /*transition: none 33ms cubic-bezier(.3, 0, 0, 1);*/
+    /*transition-property: all;*/
+    /*transform: scale(1.05);*/
+}
+
+.ant-list-item:active {
+    cursor: grabbing;
+    /*transition: none 33ms cubic-bezier(.3, 0, 0, 1);*/
+    /*transition-property: all;*/
+    transform: scale(0.95);
+}
+
+.ant-list-item:disabled {
+    cursor: grab;
+    /*transition: none 33ms cubic-bezier(.3, 0, 0, 1);*/
+    /*transition-property: all;*/
+    /*transform: scale(0.95);*/
+}
+
+
 
 .site-description-item-profile-wrapper {
     margin-bottom: 7px;

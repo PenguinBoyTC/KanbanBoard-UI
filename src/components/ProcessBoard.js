@@ -14,7 +14,7 @@ class ProcessBoard extends React.Component {
             openCardInfo: null,
             isDrawerVisible: false,
             isModalVisible: false,
-            reload: false,
+            submitButtonReload: false,
             cardList: []
         }
     }
@@ -30,13 +30,22 @@ class ProcessBoard extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, _) {
-        if (this.state.reload && prevState.reload !== this.state.reload) {
+        const {submitButtonReload, openCardInfo} = this.state
+        if (submitButtonReload && prevState.submitButtonReload !== submitButtonReload) {
             fetchCardList()
                 .then((cardList) => {
                     this.setState({
                         cardList: cardList,
-                        reload: false,
+                        submitButtonReload: false,
                     })
+                })
+        }
+        if (!openCardInfo && prevState.openCardInfo !== openCardInfo) {
+            fetchCardList()
+                .then((cardList) => {
+                    this.setState({
+                        cardList: cardList,
+                                            })
                 })
         }
     }
@@ -68,7 +77,7 @@ class ProcessBoard extends React.Component {
 
     setReloadValue = (value) => {
         this.setState({
-            reload: value
+            submitButtonReload: value
         })
     }
 
